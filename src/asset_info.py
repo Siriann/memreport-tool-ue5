@@ -21,11 +21,21 @@ class TextureInfo:
 
 
 class AssetInfo:
-    def __init__(self, text):
+    def __init__(self, text, filesize_index):
         items = text.split()
 
         self.respath = ResPath(items[1])
-        self.filesize = FileSize.from_string(items[4] + 'kb')
+        self.filesize = FileSize.from_string(items[filesize_index] + 'kb')
 
     def __str__(self):
         return 'Name {}, Size: {}'.format(self.respath.chunks[-1], str(self.filesize))
+
+
+class SoundWaveInfo(AssetInfo):
+    def __init__(self, text):
+        AssetInfo.__init__(self, text, 4)
+
+
+class AnimSequenceInfo(AssetInfo):
+    def __init__(self, text):
+        AssetInfo.__init__(self, text, 3)

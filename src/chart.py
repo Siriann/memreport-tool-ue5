@@ -14,7 +14,6 @@ class Chart:
         self.report = report
         self.current_plotted_root = None
         self._subplot = None
-        self.report = report
         self.root_history = []
 
         self.latest_hovered_wedge = {'wedge': None, 'data': None}

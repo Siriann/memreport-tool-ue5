@@ -1,12 +1,12 @@
 from src.filesize.filesize import FileSize
-from src.memreport_blocks import TextureMemreportBlock, SoundMemreportBlock
+from src.memreport_blocks import *
 from src.asset_info_tree import AssetInfoTree
 
 
 class MemReport:
-    asset_types = ['textures', 'sounds']
+    asset_types = ['textures', 'sounds', 'animsequences']
 
-    asset_blocks = {'textures': TextureMemreportBlock(), 'sounds': SoundMemreportBlock()}
+    asset_blocks = {'textures': TextureMemreportBlock(), 'sounds': SoundMemreportBlock(), 'animsequences': AnimSeqMemreportBlock()}
 
     def __init__(self, file_path, asset_type, size_threshold=None):
         self.tree = None
