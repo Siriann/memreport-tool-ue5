@@ -1,0 +1,53 @@
+/* Layout modes layered on top of the existing visual styles. */
+.comparison-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 2px 0 14px;
+  padding: 0;
+}
+
+.comparison-tabs[hidden] { display: none; }
+
+.single-report-mode .reports-grid.single-grid {
+  grid-template-columns: 1fr;
+}
+
+.single-report-mode .report-column[data-side="A"] .chart-stack {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.single-report-mode .report-column[data-side="A"] .chart-card[data-chart="animsequences"] {
+  grid-column: 1 / -1;
+}
+
+.comparison-mode .diff-filter {
+  display: none;
+}
+
+.comparison-mode .reports-grid.comparison-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.comparison-mode .report-column .chart-stack {
+  display: block;
+}
+
+.comparison-mode .chart-card[hidden],
+.single-report-mode .report-column[data-side="B"][hidden] {
+  display: none;
+}
+
+@media (max-width: 1200px) {
+  .single-report-mode .report-column[data-side="A"] .chart-stack {
+    grid-template-columns: 1fr;
+  }
+
+  .single-report-mode .report-column[data-side="A"] .chart-card[data-chart="animsequences"] {
+    grid-column: auto;
+  }
+
+  .comparison-mode .reports-grid.comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
