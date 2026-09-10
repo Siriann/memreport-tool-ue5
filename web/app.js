@@ -6,7 +6,7 @@
   const { assetsUnderNode, resolveSectionPath } = window.MemReport.Queries;
   const { parentPath } = window.MemReport.Paths;
   const { parseMemReport } = window.MemReport.MemreportParser;
-  const { createAppState } = window.MemReport.Store;
+  const { createAppState, dispatch, subscribe } = window.MemReport.Store;
   const { buildHeader, renderAssetTable } = window.MemReport.Table;
   const { hideTooltip, renderSunburst } = window.MemReport.Sunburst;
   const { displayValue, nextSort, sortRows } = window.MemReport.Display;
@@ -27,7 +27,7 @@
 
   document.getElementById("clearB").addEventListener("click", () => clearReport("B"));
   syncNavigationInput.addEventListener("change", () => {
-    state.syncNavigation = syncNavigationInput.checked;
+    dispatch({ type: "SYNC_NAVIGATION_CHANGED", enabled: syncNavigationInput.checked });
     clearDiffSelection();
     if (state.syncNavigation && isComparing()) {
       const type = state.activeComparisonType;
@@ -41,7 +41,7 @@
   });
 
   diffTypeFilter.addEventListener("change", () => {
-    state.diffType = diffTypeFilter.value;
+    dispatch({ type: "DIFF_TYPE_SELECTED", assetType: diffTypeFilter.value });
     renderDiff();
   });
 
@@ -54,11 +54,10 @@
     });
   });
 
-  window.addEventListener("memreport:comparison-type-changed", (event) => {
-    const type = event.detail?.type;
-    if (!CHART_TYPES[type]) return;
-    state.activeComparisonType = type;
-    renderNavigationControlsForType(type);
+  subscribe((_, action) => {
+    if (action.type === "COMPARISON_TYPE_SELECTED") {
+      renderNavigationControlsForType(state.activeComparisonType);
+    }
   });
 
   function buildReportColumns() {
@@ -116,28 +115,33 @@
     input.addEventListener("change", async () => {
       const file = input.files && input.files[0];
       if (!file) return;
+
+      dispatch({ type: "REPORT_LOAD_STARTED", side, fileName: file.name });
+      setStatus(`Parsing ${file.name} locally…`);
+
       try {
-        setStatus(`Parsing ${file.name} locally…`);
-        state.reports[side] = parseMemReport(await file.text(), file.name);
+        const report = parseMemReport(await file.text(), file.name);
+        dispatch({ type: "REPORT_LOAD_SUCCEEDED", side, report });
         document.getElementById(`report${side}Name`).textContent = file.name;
         document.getElementById(`column${side}Name`).textContent = file.name;
-        if (side === "B") document.getElementById("clearB").disabled = false;
         resetAllViews();
         updateStatus();
         renderDiff();
       } catch (error) {
         console.error(error);
-        setStatus(`Could not parse ${file.name}: ${error.message}`, true);
+        dispatch({ type: "REPORT_LOAD_FAILED", side, fileName: file.name, error: error.message });
+        const retained = state.reports[side]?.name;
+        const suffix = retained ? ` Keeping ${retained} loaded.` : "";
+        setStatus(`Could not parse ${file.name}: ${error.message}.${suffix}`, true);
       }
     });
   }
 
   function clearReport(side) {
-    state.reports[side] = null;
+    dispatch({ type: "REPORT_CLEARED", side });
     document.getElementById(`report${side}Input`).value = "";
     document.getElementById(`report${side}Name`).textContent = side === "A" ? "No report selected" : "Optional comparison report";
     document.getElementById(`column${side}Name`).textContent = `Report ${side}`;
-    if (side === "B") document.getElementById("clearB").disabled = true;
     resetAllViews();
     updateStatus();
     renderDiff();
@@ -264,7 +268,7 @@
 
   function focusDiffRow(row) {
     state.selectedDiff = { tab: state.diffTab, assetType: row.assetType, canonicalPath: row.canonicalPath };
-    window.dispatchEvent(new CustomEvent("memreport:select-comparison-type", { detail: { type: row.assetType } }));
+    dispatch({ type: "COMPARISON_TYPE_SELECTED", assetType: row.assetType });
 
     let targetPath = row.canonicalPath;
     let selectedAssetPath = null;
