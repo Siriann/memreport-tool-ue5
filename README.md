@@ -19,7 +19,13 @@ Current status: displaying texture, sound, or animation sequence size informatio
 
 Application was created with Python 3.6.
 
-Required packages:
+Install the required packages with:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+The dependency list currently contains:
 
 - `anytree`
 - `matplotlib`
