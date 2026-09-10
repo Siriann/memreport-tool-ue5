@@ -4,15 +4,12 @@ A browser-based Unreal Engine `.memreport` visualizer and comparison tool.
 
 The current application runs entirely in the browser: select one report to explore its memory usage, or select two reports to compare builds and drill into what changed. Reports are read locally and are not uploaded anywhere.
 
-The legacy Python CLI is being removed. The web application and its JavaScript parser are now the active implementation.
-
 ## Features
 
 ### Local, dependency-free browser application
 
 - Opens `.memreport` files directly from disk using the browser file picker.
 - Reads report contents locally in the browser; no upload or backend is required.
-- Requires no Python environment, npm packages, framework, CDN, build step, or local web server.
 - Parses the detailed texture, sound-wave, and animation-sequence sections independently, so reports can still be inspected when only some detailed sections are available.
 - Supports the dynamic `ListTextures` column layouts used by UE4 and UE5 reports rather than assuming a fixed texture column order.
 
@@ -47,11 +44,6 @@ Every visible chart has a table for the assets contained in the currently select
 - Sound-wave and animation-sequence tables expose the fields currently available from their detailed memreport sections.
 
 The table and chart follow the same navigation path, making it possible to use the chart for spatial exploration and the table to identify the largest individual offenders.
-
-<!-- SCREENSHOT NEEDED: A chart together with the sortable asset table below it. Prefer a texture section with several metadata columns visible. Suggested file: docs/screenshots/asset-table.png -->
-<!-- After adding the image, uncomment/update this line:
-![Asset table](docs/screenshots/asset-table.png)
--->
 
 ## Comparing two reports
 
