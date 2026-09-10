@@ -73,6 +73,15 @@
   </main>
 
   <div id="tooltip" class="tooltip" hidden></div>
+  <script>
+    (() => {
+      const originalAdd = DOMTokenList.prototype.add;
+      DOMTokenList.prototype.add = function (...tokens) {
+        const nonEmptyTokens = tokens.filter((token) => String(token).length > 0);
+        if (nonEmptyTokens.length) originalAdd.apply(this, nonEmptyTokens);
+      };
+    })();
+  </script>
   <script src="app.js"></script>
 </body>
 </html>
