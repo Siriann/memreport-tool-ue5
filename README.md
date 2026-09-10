@@ -89,7 +89,7 @@ Diff tables are sortable. Clicking a diff row navigates the chart or charts abov
 
 ## Running the application
 
-1. Open `web/index.html` in a modern browser.
+1. Open `index.html` in a modern browser.
 2. Click **Choose report A** and select a `.memreport` file.
 3. Explore the texture, sound, and animation views.
 4. Optionally click **Choose report B** and select another `.memreport` file to compare.
@@ -125,19 +125,37 @@ Application State
 UI Rendering
 ```
 
-The main code areas under `web/js/` are:
+The main code areas under `js/` are:
 
 - `parsing/` — memreport parsing, including textures and generic object-list sections;
 - `model/` — report models, canonical path handling, and hierarchy/tree construction;
 - `analysis/` — report queries and A/B diff computation;
 - `providers/` — acquisition of report data, currently from local browser files;
 - `state/` — centralized application state and state transitions;
-- `ui/` — reusable table and sunburst rendering;
+- `ui/` — reusable table, sunburst, and layout behavior;
 - `util/` — display and file-size helpers.
 
-`web/app.js` coordinates the application behavior and `web/layout.js` controls the single-report/comparison presentation.
+`js/app.js` is the application composition root. Layout-specific UI behavior lives in `js/ui/layout.js`. Stylesheets are grouped under `css/`.
 
 The JavaScript parser is the canonical MemReport parser for the web implementation. Browser `File` objects are kept outside the parsed report model so report acquisition can change without coupling file-system details to the domain model.
+
+## Repository structure
+
+```text
+index.html              Browser entry point
+css/                    Stylesheets
+js/app.js               Application composition root
+js/config.js            Shared configuration
+js/analysis/            Queries and report-diff logic
+js/model/               Canonical paths, trees and report model
+js/parsing/             MemReport parsing
+js/providers/           Report acquisition adapters
+js/state/               Application state store
+js/ui/                  UI rendering and layout behavior
+js/util/                Shared utility functions
+docs/                   Documentation assets and screenshots
+sample_reports/         Example `.memreport` files
+```
 
 ## Future server-backed direction
 
