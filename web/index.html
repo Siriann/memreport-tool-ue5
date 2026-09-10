@@ -38,10 +38,16 @@
 
     <div id="status" class="status">Choose report A to begin. Report B is optional.</div>
 
-    <div id="comparisonTabs" class="comparison-tabs" role="tablist" aria-label="Comparison asset type" hidden>
-      <button class="tab-button active" data-comparison-type="textures" role="tab" aria-selected="true">Textures</button>
-      <button class="tab-button" data-comparison-type="sounds" role="tab" aria-selected="false">Sounds</button>
-      <button class="tab-button" data-comparison-type="animsequences" role="tab" aria-selected="false">Animations</button>
+    <div id="comparisonToolbar" class="comparison-toolbar" hidden>
+      <div id="comparisonTabs" class="comparison-tabs" role="tablist" aria-label="Comparison asset type">
+        <button class="tab-button active" data-comparison-type="textures" role="tab" aria-selected="true">Textures</button>
+        <button class="tab-button" data-comparison-type="sounds" role="tab" aria-selected="false">Sounds</button>
+        <button class="tab-button" data-comparison-type="animsequences" role="tab" aria-selected="false">Animations</button>
+      </div>
+      <label class="sync-navigation-toggle" title="When enabled, navigating either chart moves both reports to the same path.">
+        <input id="syncNavigation" type="checkbox" checked>
+        <span>Sync navigation</span>
+      </label>
     </div>
 
     <section class="reports-grid">
@@ -59,7 +65,7 @@
       <div class="diff-heading">
         <div>
           <h2>Differences: B compared with A</h2>
-          <p>Only added, removed, or changed entries are shown for the selected asset type.</p>
+          <p>Only added, removed, or changed entries are shown for the selected asset type. Click a row to inspect that path in the charts above.</p>
         </div>
         <label class="diff-filter">Asset type
           <select id="diffTypeFilter">

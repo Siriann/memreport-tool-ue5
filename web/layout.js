@@ -1,6 +1,7 @@
 (() => {
   "use strict";
 
+  const comparisonToolbar = document.getElementById("comparisonToolbar");
   const comparisonTabs = document.getElementById("comparisonTabs");
   const reportBName = document.getElementById("reportBName");
   const clearB = document.getElementById("clearB");
@@ -17,7 +18,23 @@
       activeType = button.dataset.comparisonType;
       syncComparisonSelection();
       applyLayout();
+      emitComparisonType();
     });
+  });
+
+  window.addEventListener("memreport:select-comparison-type", (event) => {
+    const requestedType = event.detail?.type;
+    if (!comparisonButtons.some((button) => button.dataset.comparisonType === requestedType)) return;
+    if (requestedType === activeType) {
+      syncComparisonSelection();
+      applyLayout();
+      emitComparisonType();
+      return;
+    }
+    activeType = requestedType;
+    syncComparisonSelection();
+    applyLayout();
+    emitComparisonType();
   });
 
   new MutationObserver(applyLayout).observe(reportBName, { childList: true, characterData: true, subtree: true });
@@ -44,6 +61,10 @@
     }
   }
 
+  function emitComparisonType() {
+    window.dispatchEvent(new CustomEvent("memreport:comparison-type-changed", { detail: { type: activeType } }));
+  }
+
   function setVisibleChart(column, type) {
     column.querySelectorAll(".chart-card").forEach((card) => {
       card.hidden = card.dataset.chart !== type;
@@ -60,6 +81,7 @@
     const comparing = hasReportB();
     document.body.classList.toggle("comparison-mode", comparing);
     document.body.classList.toggle("single-report-mode", !comparing);
+    comparisonToolbar.hidden = !comparing;
     comparisonTabs.hidden = !comparing;
     reportBColumn.hidden = !comparing;
 
@@ -78,4 +100,5 @@
   }
 
   applyLayout();
+  emitComparisonType();
 })();
