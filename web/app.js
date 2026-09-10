@@ -5,7 +5,7 @@
   const { buildAssetDiff, buildDirectoryDiff } = window.MemReport.Diff;
   const { assetsUnderNode, resolveSectionPath } = window.MemReport.Queries;
   const { parentPath } = window.MemReport.Paths;
-  const { parseMemReport } = window.MemReport.MemreportParser;
+  const { LocalFileReportProvider } = window.MemReport.LocalFileReportProvider;
   const { createAppState, dispatch, subscribe } = window.MemReport.Store;
   const { buildHeader, renderAssetTable } = window.MemReport.Table;
   const { hideTooltip, renderSunburst } = window.MemReport.Sunburst;
@@ -13,6 +13,7 @@
   const { formatBytes, formatDelta, formatNullableBytes } = window.MemReport.Filesize;
 
   const state = createAppState();
+  const localReportProvider = new LocalFileReportProvider();
   const statusEl = document.getElementById("status");
   const tooltip = document.getElementById("tooltip");
   const diffSection = document.getElementById("diffSection");
@@ -112,29 +113,32 @@
 
   function wireReportInput(side) {
     const input = document.getElementById(`report${side}Input`);
-    input.addEventListener("change", async () => {
+    input.addEventListener("change", () => {
       const file = input.files && input.files[0];
       if (!file) return;
-
-      dispatch({ type: "REPORT_LOAD_STARTED", side, fileName: file.name });
-      setStatus(`Parsing ${file.name} locally…`);
-
-      try {
-        const report = parseMemReport(await file.text(), file.name);
-        dispatch({ type: "REPORT_LOAD_SUCCEEDED", side, report });
-        document.getElementById(`report${side}Name`).textContent = file.name;
-        document.getElementById(`column${side}Name`).textContent = file.name;
-        resetAllViews();
-        updateStatus();
-        renderDiff();
-      } catch (error) {
-        console.error(error);
-        dispatch({ type: "REPORT_LOAD_FAILED", side, fileName: file.name, error: error.message });
-        const retained = state.reports[side]?.name;
-        const suffix = retained ? ` Keeping ${retained} loaded.` : "";
-        setStatus(`Could not parse ${file.name}: ${error.message}.${suffix}`, true);
-      }
+      loadReport(side, localReportProvider, file, localReportProvider.describe(file));
     });
+  }
+
+  async function loadReport(side, provider, reportReference, descriptor) {
+    dispatch({ type: "REPORT_LOAD_STARTED", side, fileName: descriptor.name });
+    setStatus(`Loading ${descriptor.name}…`);
+
+    try {
+      const report = await provider.loadReport(reportReference);
+      dispatch({ type: "REPORT_LOAD_SUCCEEDED", side, report });
+      document.getElementById(`report${side}Name`).textContent = descriptor.name;
+      document.getElementById(`column${side}Name`).textContent = descriptor.name;
+      resetAllViews();
+      updateStatus();
+      renderDiff();
+    } catch (error) {
+      console.error(error);
+      dispatch({ type: "REPORT_LOAD_FAILED", side, fileName: descriptor.name, error: error.message });
+      const retained = state.reports[side]?.name;
+      const suffix = retained ? ` Keeping ${retained} loaded.` : "";
+      setStatus(`Could not load ${descriptor.name}: ${error.message}.${suffix}`, true);
+    }
   }
 
   function clearReport(side) {
