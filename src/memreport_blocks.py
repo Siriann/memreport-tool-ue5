@@ -31,6 +31,7 @@ class ObjListMemreportBlock:
         self.info_class = info_class
 
     def configure_header(self, line):
+        # Obj List parsing still uses its whitespace-delimited legacy format.
         pass
 
     def parse_info(self, line):
