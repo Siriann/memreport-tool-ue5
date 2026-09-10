@@ -13,6 +13,11 @@
     diffTab: "directories",
     diffType: "all",
     diffSort: { key: "deltaBytes", direction: -1 },
+    activeComparisonType: "textures",
+    selectedDiff: null,
+    syncNavigation: true,
+    jointHistory: new Map(Object.keys(CHART_TYPES).map((type) => [type, []])),
+    jointCurrentPath: new Map(Object.keys(CHART_TYPES).map((type) => [type, "/"])),
   };
 
   const statusEl = document.getElementById("status");
@@ -21,16 +26,32 @@
   const diffTable = document.getElementById("diffTable");
   const diffSummary = document.getElementById("diffSummary");
   const diffTypeFilter = document.getElementById("diffTypeFilter");
+  const syncNavigationInput = document.getElementById("syncNavigation");
 
   buildReportColumns();
   wireReportInput("A");
   wireReportInput("B");
 
   document.getElementById("clearB").addEventListener("click", () => clearReport("B"));
+  syncNavigationInput.addEventListener("change", () => {
+    state.syncNavigation = syncNavigationInput.checked;
+    clearDiffSelection();
+    if (state.syncNavigation && isComparing()) {
+      const type = state.activeComparisonType;
+      const source = state.views.get(`A:${type}`);
+      const path = currentPath(source);
+      state.jointHistory.set(type, []);
+      navigateJoint(type, path, { recordHistory: false });
+    } else {
+      renderNavigationControlsForType(state.activeComparisonType);
+    }
+  });
+
   diffTypeFilter.addEventListener("change", () => {
     state.diffType = diffTypeFilter.value;
     renderDiff();
   });
+
   document.querySelectorAll("[data-diff-tab]").forEach((button) => {
     button.addEventListener("click", () => {
       state.diffTab = button.dataset.diffTab;
@@ -38,6 +59,13 @@
       document.querySelectorAll("[data-diff-tab]").forEach((item) => item.classList.toggle("active", item === button));
       renderDiff();
     });
+  });
+
+  window.addEventListener("memreport:comparison-type-changed", (event) => {
+    const type = event.detail?.type;
+    if (!CHART_TYPES[type]) return;
+    state.activeComparisonType = type;
+    renderNavigationControlsForType(type);
   });
 
   function buildReportColumns() {
@@ -51,7 +79,10 @@
         card.innerHTML = `
           <div class="chart-heading">
             <div><h2>${config.title}</h2><div class="breadcrumb" data-role="breadcrumb">—</div></div>
-            <button class="back-button" data-role="back" disabled>← Back</button>
+            <div class="chart-actions">
+              <button class="home-button" data-role="home" disabled>⌂ Home</button>
+              <button class="back-button" data-role="back" disabled>← Back</button>
+            </div>
           </div>
           <div class="chart-host" data-role="chart"></div>
           <div class="chart-footer" data-role="summary"></div>
@@ -68,18 +99,19 @@
           breadcrumb: card.querySelector('[data-role="breadcrumb"]'),
           summary: card.querySelector('[data-role="summary"]'),
           back: card.querySelector('[data-role="back"]'),
+          home: card.querySelector('[data-role="home"]'),
           tableHost: card.querySelector('[data-role="table"]'),
           tableTitle: card.querySelector('[data-role="table-title"]'),
           tableCount: card.querySelector('[data-role="table-count"]'),
           currentRoot: null,
+          missingPath: null,
+          selectedAssetPath: null,
           history: [],
           sort: { key: "bytes", direction: -1 },
         };
-        view.back.addEventListener("click", () => {
-          if (!view.history.length) return;
-          view.currentRoot = view.history.pop();
-          renderView(view);
-        });
+
+        view.back.addEventListener("click", () => navigateBack(view));
+        view.home.addEventListener("click", () => navigateHome(view));
         state.views.set(`${side}:${type}`, view);
         renderView(view);
       }
@@ -98,7 +130,7 @@
         document.getElementById(`report${side}Name`).textContent = file.name;
         document.getElementById(`column${side}Name`).textContent = file.name;
         if (side === "B") document.getElementById("clearB").disabled = false;
-        resetViewsForSide(side);
+        resetAllViews();
         updateStatus();
         renderDiff();
       } catch (error) {
@@ -114,7 +146,7 @@
     document.getElementById(`report${side}Name`).textContent = side === "A" ? "No report selected" : "Optional comparison report";
     document.getElementById(`column${side}Name`).textContent = `Report ${side}`;
     if (side === "B") document.getElementById("clearB").disabled = true;
-    resetViewsForSide(side);
+    resetAllViews();
     updateStatus();
     renderDiff();
   }
@@ -129,15 +161,150 @@
     setStatus(`Comparing ${a.name} with ${b.name}. Detailed sections: A ${aCount}/3, B ${bCount}/3.`);
   }
 
-  function resetViewsForSide(side) {
+  function isComparing() {
+    return Boolean(state.reports.A && state.reports.B);
+  }
+
+  function resetAllViews() {
+    state.selectedDiff = null;
     for (const type of Object.keys(CHART_TYPES)) {
-      const view = state.views.get(`${side}:${type}`);
-      const section = state.reports[side]?.sections[type];
-      view.currentRoot = section?.root || null;
-      view.history = [];
-      view.sort = { key: "bytes", direction: -1 };
-      renderView(view);
+      state.jointHistory.set(type, []);
+      state.jointCurrentPath.set(type, "/");
+      for (const side of ["A", "B"]) {
+        const view = state.views.get(`${side}:${type}`);
+        const section = state.reports[side]?.sections[type];
+        view.currentRoot = section?.root || null;
+        view.missingPath = null;
+        view.selectedAssetPath = null;
+        view.history = [];
+        view.sort = { key: "bytes", direction: -1 };
+        renderView(view);
+      }
     }
+  }
+
+  function currentPath(view) {
+    return view?.missingPath || view?.currentRoot?.canonicalPath || "/";
+  }
+
+  function resolvePath(side, type, path) {
+    const section = state.reports[side]?.sections[type];
+    if (!section?.root) return { node: null, missing: false };
+    const node = path === "/" ? section.root : section.nodesByPath.get(path) || null;
+    return { node, missing: !node };
+  }
+
+  function applyPathToView(view, path, selectedAssetPath = null) {
+    const resolved = resolvePath(view.side, view.type, path);
+    view.currentRoot = resolved.node;
+    view.missingPath = resolved.missing ? path : null;
+    view.selectedAssetPath = selectedAssetPath;
+    renderView(view);
+  }
+
+  function navigateFromView(view, path, options = {}) {
+    const { selectedAssetPath = null, preserveDiffSelection = false } = options;
+    if (!preserveDiffSelection) clearDiffSelection();
+    if (isComparing() && state.syncNavigation) {
+      navigateJoint(view.type, path, { selectedAssetPath });
+      return;
+    }
+    const previous = currentPath(view);
+    if (previous !== path) view.history.push(previous);
+    applyPathToView(view, path, selectedAssetPath);
+  }
+
+  function navigateJoint(type, path, options = {}) {
+    const { recordHistory = true, selectedAssetPath = null } = options;
+    const previous = state.jointCurrentPath.get(type) || "/";
+    if (recordHistory && previous !== path) state.jointHistory.get(type).push(previous);
+    state.jointCurrentPath.set(type, path);
+    for (const side of ["A", "B"]) {
+      applyPathToView(state.views.get(`${side}:${type}`), path, selectedAssetPath);
+    }
+  }
+
+  function navigateBack(view) {
+    clearDiffSelection();
+    if (isComparing() && state.syncNavigation) {
+      const history = state.jointHistory.get(view.type);
+      if (!history.length) return;
+      const path = history.pop();
+      navigateJoint(view.type, path, { recordHistory: false });
+      return;
+    }
+    if (!view.history.length) return;
+    applyPathToView(view, view.history.pop());
+  }
+
+  function navigateHome(view) {
+    clearDiffSelection();
+    if (currentPath(view) === "/") return;
+    if (isComparing() && state.syncNavigation) {
+      navigateJoint(view.type, "/");
+      return;
+    }
+    view.history.push(currentPath(view));
+    applyPathToView(view, "/");
+  }
+
+  function clearDiffSelection() {
+    if (!state.selectedDiff && !Array.from(state.views.values()).some((view) => view.selectedAssetPath)) return;
+    state.selectedDiff = null;
+    for (const view of state.views.values()) view.selectedAssetPath = null;
+    renderDiff();
+  }
+
+  function renderNavigationControlsForType(type) {
+    for (const side of ["A", "B"]) {
+      const view = state.views.get(`${side}:${type}`);
+      if (view) updateNavigationControls(view);
+    }
+  }
+
+  function updateNavigationControls(view) {
+    const hasRoot = Boolean(state.reports[view.side]?.sections[view.type]?.root);
+    if (!hasRoot) {
+      view.back.disabled = true;
+      view.home.disabled = true;
+      return;
+    }
+    if (isComparing() && state.syncNavigation) {
+      view.back.disabled = state.jointHistory.get(view.type).length === 0;
+      view.home.disabled = state.jointCurrentPath.get(view.type) === "/";
+    } else {
+      view.back.disabled = view.history.length === 0;
+      view.home.disabled = currentPath(view) === "/";
+    }
+  }
+
+  function focusDiffRow(row) {
+    state.selectedDiff = { tab: state.diffTab, assetType: row.assetType, canonicalPath: row.canonicalPath };
+    window.dispatchEvent(new CustomEvent("memreport:select-comparison-type", { detail: { type: row.assetType } }));
+
+    let targetPath = row.canonicalPath;
+    let selectedAssetPath = null;
+    if (state.diffTab === "assets") {
+      selectedAssetPath = row.canonicalPath;
+      targetPath = parentPath(row.canonicalPath);
+    }
+
+    if (state.syncNavigation) {
+      navigateJoint(row.assetType, targetPath, { selectedAssetPath });
+    } else {
+      for (const side of ["A", "B"]) {
+        const view = state.views.get(`${side}:${row.assetType}`);
+        const previous = currentPath(view);
+        if (previous !== targetPath) view.history.push(previous);
+        applyPathToView(view, targetPath, selectedAssetPath);
+      }
+    }
+    renderDiff();
+  }
+
+  function parentPath(path) {
+    const slash = path.lastIndexOf("/");
+    return slash <= 0 ? "/" : path.slice(0, slash);
   }
 
   function parseMemReport(text, name) {
@@ -322,11 +489,11 @@
     view.tableHost.replaceChildren();
     hideTooltip();
     const section = state.reports[view.side]?.sections[view.type];
+    updateNavigationControls(view);
 
-    if (!view.currentRoot) {
+    if (!section?.root) {
       view.breadcrumb.textContent = "—";
       view.summary.textContent = section?.error || "No report loaded.";
-      view.back.disabled = true;
       view.tableTitle.textContent = "Assets in current section";
       view.tableCount.textContent = "";
       const empty = document.createElement("div");
@@ -336,7 +503,18 @@
       return;
     }
 
-    view.back.disabled = view.history.length === 0;
+    if (view.missingPath) {
+      view.breadcrumb.textContent = view.missingPath;
+      view.summary.textContent = `${view.missingPath} is not present in Report ${view.side}.`;
+      view.tableTitle.textContent = `Assets under ${view.missingPath}`;
+      view.tableCount.textContent = "0 rows";
+      const empty = document.createElement("div");
+      empty.className = "chart-empty missing-path";
+      empty.textContent = `This path is not present in Report ${view.side}.`;
+      view.host.appendChild(empty);
+      return;
+    }
+
     view.breadcrumb.textContent = view.currentRoot.canonicalPath || "/";
     const assets = assetsUnderNode(section.assets, view.currentRoot);
     view.summary.textContent = `${formatBytes(view.currentRoot.bytes)} · ${assets.length} asset${assets.length === 1 ? "" : "s"}`;
@@ -366,11 +544,7 @@
       path.addEventListener("pointermove", (event) => showTooltip(event, segment.node));
       path.addEventListener("pointerleave", hideTooltip);
       if (segment.node.children.length) {
-        const drill = () => {
-          view.history.push(view.currentRoot);
-          view.currentRoot = segment.node;
-          renderView(view);
-        };
+        const drill = () => navigateFromView(view, segment.node.canonicalPath);
         path.addEventListener("click", drill);
         path.addEventListener("keydown", (event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -405,6 +579,7 @@
     const tbody = document.createElement("tbody");
     for (const asset of rows) {
       const tr = document.createElement("tr");
+      if (asset.canonicalPath === view.selectedAssetPath) tr.classList.add("asset-selected");
       for (const column of columns) {
         const td = document.createElement("td");
         if (column.numeric) td.classList.add("number");
@@ -417,6 +592,10 @@
     }
     table.appendChild(tbody);
     view.tableHost.replaceChildren(table);
+    if (view.selectedAssetPath) {
+      const selected = tbody.querySelector("tr.asset-selected");
+      if (selected) queueMicrotask(() => selected.scrollIntoView({ block: "nearest" }));
+    }
   }
 
   function tableColumnsForType(type) {
@@ -579,6 +758,20 @@
     const tbody = document.createElement("tbody");
     for (const row of rows) {
       const tr = document.createElement("tr");
+      tr.classList.add("diff-row");
+      tr.tabIndex = 0;
+      const selected = state.selectedDiff
+        && state.selectedDiff.tab === state.diffTab
+        && state.selectedDiff.assetType === row.assetType
+        && state.selectedDiff.canonicalPath === row.canonicalPath;
+      if (selected) tr.classList.add("diff-row-selected");
+      tr.addEventListener("click", () => focusDiffRow(row));
+      tr.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          focusDiffRow(row);
+        }
+      });
       for (const column of columns) {
         const td = document.createElement("td");
         if (column.numeric) td.classList.add("number");
@@ -628,11 +821,9 @@
 
   function buildNodeDescription(node) {
     const lines = [node.canonicalPath || "/", `Size: ${formatBytes(node.bytes)}`];
-    if (node.asset) {
+    if (node.asset?.type === "textures") {
       const asset = node.asset;
-      if (asset.type === "textures") {
-        lines.push(`Dimensions: ${asset.dimensions}`, `Format: ${asset.format}`, `LOD Group: ${asset.lodGroup}`, `Streaming: ${displayValue(asset.streaming)}`, `VT: ${displayValue(asset.virtualTexture)}`, `Usage: ${asset.usageCount}`);
-      }
+      lines.push(`Dimensions: ${asset.dimensions}`, `Format: ${asset.format}`, `LOD Group: ${asset.lodGroup}`, `Streaming: ${displayValue(asset.streaming)}`, `VT: ${displayValue(asset.virtualTexture)}`, `Usage: ${asset.usageCount}`);
     }
     if (node.children.length) lines.push("Click to drill down");
     return lines.join("\n");
@@ -649,7 +840,6 @@
   }
 
   function hideTooltip() { tooltip.hidden = true; }
-
   function formatType(value) { return CHART_TYPES[value]?.title || value; }
   function formatNullableBytes(value) { return value == null ? "—" : formatBytes(value); }
   function formatDelta(value) { return `${value > 0 ? "+" : ""}${formatBytesSigned(value)}`; }
@@ -688,7 +878,9 @@
     return `M ${p1.x} ${p1.y} A ${outer} ${outer} 0 ${large} 1 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${inner} ${inner} 0 ${large} 0 ${p4.x} ${p4.y} Z`;
   }
 
-  function polar(cx, cy, radius, angle) { return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) }; }
+  function polar(cx, cy, radius, angle) {
+    return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
+  }
 
   function svgEl(name, attrs = {}) {
     const element = document.createElementNS("http://www.w3.org/2000/svg", name);
