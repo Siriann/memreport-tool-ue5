@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MemReport Viewer</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="layout.css">
 </head>
 <body>
   <header class="app-header">
@@ -37,6 +38,12 @@
 
     <div id="status" class="status">Choose report A to begin. Report B is optional.</div>
 
+    <div id="comparisonTabs" class="comparison-tabs" role="tablist" aria-label="Comparison asset type" hidden>
+      <button class="tab-button active" data-comparison-type="textures" role="tab" aria-selected="true">Textures</button>
+      <button class="tab-button" data-comparison-type="sounds" role="tab" aria-selected="false">Sounds</button>
+      <button class="tab-button" data-comparison-type="animsequences" role="tab" aria-selected="false">Animations</button>
+    </div>
+
     <section class="reports-grid">
       <section class="report-column" data-side="A">
         <div class="column-title"><span class="report-badge">A</span><span id="columnAName">Report A</span></div>
@@ -52,7 +59,7 @@
       <div class="diff-heading">
         <div>
           <h2>Differences: B compared with A</h2>
-          <p>Only added, removed, or changed entries are shown.</p>
+          <p>Only added, removed, or changed entries are shown for the selected asset type.</p>
         </div>
         <label class="diff-filter">Asset type
           <select id="diffTypeFilter">
@@ -83,5 +90,6 @@
     })();
   </script>
   <script src="app.js"></script>
+  <script src="layout.js"></script>
 </body>
 </html>
