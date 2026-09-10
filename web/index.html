@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MemReport Viewer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>MemReport Viewer</h1>
+      <p>Local, browser-only Unreal Engine memreport visualizer.</p>
+    </div>
+    <div class="controls">
+      <label class="folder-button">
+        <input id="folderInput" type="file" webkitdirectory directory multiple accept=".memreport">
+        Choose reports folder
+      </label>
+      <label class="report-control">
+        <span>Report</span>
+        <select id="reportSelect" disabled>
+          <option>Select a reports folder first</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <main>
+    <div id="status" class="status">Choose a folder containing <code>.memreport</code> files.</div>
+    <section class="charts-grid">
+      <article class="chart-card" data-chart="textures">
+        <div class="chart-heading"><div><h2>Textures</h2><div class="breadcrumb" data-role="breadcrumb">—</div></div><button class="back-button" data-role="back" disabled>← Back</button></div>
+        <div class="chart-host" data-role="chart"></div><div class="chart-footer" data-role="summary"></div>
+      </article>
+      <article class="chart-card" data-chart="sounds">
+        <div class="chart-heading"><div><h2>Sounds</h2><div class="breadcrumb" data-role="breadcrumb">—</div></div><button class="back-button" data-role="back" disabled>← Back</button></div>
+        <div class="chart-host" data-role="chart"></div><div class="chart-footer" data-role="summary"></div>
+      </article>
+      <article class="chart-card" data-chart="animsequences">
+        <div class="chart-heading"><div><h2>Animations</h2><div class="breadcrumb" data-role="breadcrumb">—</div></div><button class="back-button" data-role="back" disabled>← Back</button></div>
+        <div class="chart-host" data-role="chart"></div><div class="chart-footer" data-role="summary"></div>
+      </article>
+    </section>
+  </main>
+  <div id="tooltip" class="tooltip" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>
