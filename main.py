@@ -64,7 +64,7 @@ if __name__ == '__main__':
         try:
             mem_report = MemReport(input_file_path, chart_type, size_threshold)
         except Exception as e:
-            print('Could not parse the report file.')
+            print('Could not parse the report file: {}'.format(e))
             sys.exit()
 
         chart = Chart(mem_report)
