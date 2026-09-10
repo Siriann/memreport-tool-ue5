@@ -13,10 +13,7 @@ The current application runs entirely in the browser: select one report to explo
 - Parses the detailed texture, sound-wave, and animation-sequence sections independently, so reports can still be inspected when only some detailed sections are available.
 - Supports the dynamic `ListTextures` column layouts used by UE4 and UE5 reports rather than assuming a fixed texture column order.
 
-<!-- SCREENSHOT NEEDED: Main page with Report A loaded and no Report B selected. Show the report picker and the single-report chart layout. Suggested file: docs/screenshots/single-report-overview.png -->
-<!-- After adding the image, uncomment/update this line:
 ![Single-report overview](docs/screenshots/single-report-overview.png)
--->
 
 ### Interactive memory sunburst charts
 
@@ -29,10 +26,7 @@ Textures, sounds, and animation sequences are grouped by canonical Unreal asset 
 - Breadcrumbs show the path currently being inspected.
 - Chart colors are derived deterministically from canonical Unreal paths, making matching directories visually consistent between reports.
 
-<!-- SCREENSHOT NEEDED: A sunburst drilled into a useful directory, with breadcrumb plus Home/Back controls visible. Suggested file: docs/screenshots/sunburst-navigation.png -->
-<!-- After adding the image, uncomment/update this line:
 ![Sunburst navigation](docs/screenshots/sunburst-navigation.png)
--->
 
 ### Asset tables
 
@@ -62,10 +56,7 @@ When Report B is loaded, the UI switches to comparison mode:
 - Only the currently selected asset type is shown, keeping both reports aligned and making comparison easier.
 - The diff section follows the selected comparison type.
 
-<!-- SCREENSHOT NEEDED: Full A/B comparison view showing the comparison tabs and both charts side by side. Suggested file: docs/screenshots/comparison-overview.png -->
-<!-- After adding the image, uncomment/update this line:
 ![Report comparison overview](docs/screenshots/comparison-overview.png)
--->
 
 ### Synchronized or independent navigation
 
@@ -77,10 +68,7 @@ With synchronization disabled, Report A and Report B can be explored independent
 
 **Back** and **Home** respect the selected navigation mode: in synchronized mode they operate on the pair, while in independent mode they operate only on the selected report.
 
-<!-- SCREENSHOT NEEDED: Comparison mode drilled into the same directory on A and B with Sync navigation checked. A directory that differs visibly between reports is ideal. Suggested file: docs/screenshots/synchronized-navigation.png -->
-<!-- After adding the image, uncomment/update this line:
 ![Synchronized navigation](docs/screenshots/synchronized-navigation.png)
--->
 
 ### Directory and asset diffs
 
@@ -97,10 +85,7 @@ The diff tables show changes such as:
 
 Diff tables are sortable. Clicking a diff row navigates the chart or charts above to the relevant location so the change can immediately be inspected in context. For an asset diff, the matching asset is selected when possible. If the directory or asset exists on only one side, the corresponding side can be empty while the existing side is still shown correctly.
 
-<!-- SCREENSHOT NEEDED: Diff table with several changed rows and one row selected, with the charts above navigated to that change. Suggested file: docs/screenshots/diff-navigation.png -->
-<!-- After adding the image, uncomment/update this line:
 ![Diff-driven navigation](docs/screenshots/diff-navigation.png)
--->
 
 ## Running the application
 
