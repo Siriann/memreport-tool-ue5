@@ -41,8 +41,13 @@ main { padding: 18px 22px 36px; }
 .chart-empty.missing-path { color: #d3a85d; }
 .chart-footer { min-height: 40px; padding: 10px 14px; border-top: 1px solid #252b34; color: #8f9aaa; font-size: .75rem; }
 .asset-table-panel { border-top: 1px solid #252b34; }
-.table-title { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; color: #c5ccd6; font-size: .78rem; }
+.table-toolbar { display: flex; align-items: end; justify-content: space-between; gap: 12px; padding: 10px 14px; }
+.table-title { display: flex; justify-content: space-between; gap: 12px; flex: 1; color: #c5ccd6; font-size: .78rem; }
 .table-title span:last-child { color: #7f8998; }
+.table-search { display: grid; gap: 4px; min-width: min(280px, 42%); color: #aeb7c5; font-size: .7rem; }
+.table-search input { width: 100%; border: 1px solid #3b4656; border-radius: 7px; padding: 7px 9px; background: #171c23; color: #eef2f7; }
+.table-search input::placeholder { color: #6f7988; }
+.table-search input:focus { outline: 2px solid #53647c; outline-offset: 1px; }
 .table-wrap { overflow: auto; max-height: 420px; }
 .report-column .asset-table-panel .table-wrap { height: 420px; max-height: 420px; }
 table { width: 100%; border-collapse: collapse; font-size: .73rem; }
@@ -72,7 +77,15 @@ select { border: 1px solid #3b4656; border-radius: 7px; padding: 7px 9px; backgr
 .tabs { display: flex; gap: 8px; padding: 0 16px 10px; }
 .tab-button { padding: 6px 10px; font-size: .76rem; }
 .tab-button.active { background: #364457; border-color: #53647c; }
-.diff-summary { padding: 0 16px 10px; }
+.diff-tools { display: flex; align-items: end; flex-wrap: wrap; gap: 12px 18px; padding: 2px 16px 12px; border-bottom: 1px solid #252b34; }
+.diff-search { min-width: min(360px, 100%); flex: 1 1 280px; }
+.diff-filter-group { display: flex; align-items: center; gap: 10px; min-height: 34px; color: #c1c9d4; font-size: .74rem; }
+.diff-filter-group label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; }
+.diff-filter-group input { accent-color: #7187a8; }
+.diff-filter-group input:disabled + * { opacity: .45; }
+.diff-filter-group label:has(input:disabled) { opacity: .45; cursor: default; }
+.diff-filter-label { color: #8f9aaa; font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; }
+.diff-summary { padding: 10px 16px; }
 .diff-added { color: #8fdba8; }
 .diff-removed { color: #ff9ea6; }
 .diff-changed { color: #f0c674; }
@@ -90,4 +103,7 @@ select { border: 1px solid #3b4656; border-radius: 7px; padding: 7px 9px; backgr
   .report-picker { flex-wrap: wrap; }
   .comparison-toolbar { align-items: stretch; flex-direction: column; }
   .diff-heading { align-items: stretch; flex-direction: column; }
+  .table-toolbar { align-items: stretch; flex-direction: column; }
+  .table-search { min-width: 100%; }
+  .diff-filter-group { align-items: flex-start; flex-wrap: wrap; }
 }

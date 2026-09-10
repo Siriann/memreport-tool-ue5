@@ -37,6 +37,14 @@
       diffTab: "directories",
       diffType: "all",
       diffSort: { key: "deltaBytes", direction: -1 },
+      diffSearch: "",
+      diffFilters: {
+        added: true,
+        removed: true,
+        changed: true,
+        increased: false,
+        decreased: false,
+      },
       activeComparisonType: "textures",
       selectedDiff: null,
       syncNavigation: true,
@@ -98,6 +106,19 @@
       case "DIFF_TYPE_SELECTED":
         state.diffType = action.assetType;
         break;
+      case "DIFF_SEARCH_CHANGED":
+        state.diffSearch = String(action.query || "");
+        break;
+      case "DIFF_FILTER_CHANGED": {
+        if (!(action.filter in state.diffFilters)) return;
+        const next = { ...state.diffFilters, [action.filter]: Boolean(action.enabled) };
+        if (action.filter === "changed" && !next.changed) {
+          next.increased = false;
+          next.decreased = false;
+        }
+        state.diffFilters = next;
+        break;
+      }
       case "SYNC_NAVIGATION_CHANGED":
         state.syncNavigation = Boolean(action.enabled);
         break;

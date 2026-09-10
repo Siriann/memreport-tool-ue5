@@ -80,6 +80,23 @@
         <button class="tab-button active" data-diff-tab="directories">Directories</button>
         <button class="tab-button" data-diff-tab="assets">Assets</button>
       </div>
+      <div class="diff-tools">
+        <label class="table-search diff-search">
+          <span>Search</span>
+          <input id="diffSearch" type="search" placeholder="Fuzzy search name or path" autocomplete="off">
+        </label>
+        <div class="diff-filter-group" aria-label="Diff status filters">
+          <span class="diff-filter-label">Status</span>
+          <label><input type="checkbox" data-diff-filter="added" checked> Added</label>
+          <label><input type="checkbox" data-diff-filter="removed" checked> Removed</label>
+          <label><input type="checkbox" data-diff-filter="changed" checked> Changed</label>
+        </div>
+        <div class="diff-filter-group" aria-label="Changed size filters">
+          <span class="diff-filter-label">Changed size</span>
+          <label><input type="checkbox" data-diff-filter="increased"> Increased</label>
+          <label><input type="checkbox" data-diff-filter="decreased"> Decreased</label>
+        </div>
+      </div>
       <div id="diffSummary" class="diff-summary"></div>
       <div id="diffTable" class="table-wrap"></div>
     </section>
@@ -98,6 +115,7 @@
   <script src="js/config.js"></script>
   <script src="js/util/filesize.js"></script>
   <script src="js/util/display.js"></script>
+  <script src="js/util/search.js"></script>
   <script src="js/model/paths.js"></script>
   <script src="js/model/tree.js"></script>
   <script src="js/model/report-model.js"></script>

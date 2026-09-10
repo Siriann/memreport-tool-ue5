@@ -11,6 +11,7 @@
   const { hideTooltip, renderSunburst } = window.MemReport.Sunburst;
   const { displayValue, nextSort, sortRows } = window.MemReport.Display;
   const { formatBytes, formatDelta, formatNullableBytes } = window.MemReport.Filesize;
+  const { matchesFuzzySearch, nameFromPath } = window.MemReport.Search;
 
   const state = createAppState();
   const localReportProvider = new LocalFileReportProvider();
@@ -20,11 +21,13 @@
   const diffTable = document.getElementById("diffTable");
   const diffSummary = document.getElementById("diffSummary");
   const diffTypeFilter = document.getElementById("diffTypeFilter");
+  const diffSearchInput = document.getElementById("diffSearch");
   const syncNavigationInput = document.getElementById("syncNavigation");
 
   buildReportColumns();
   wireReportInput("A");
   wireReportInput("B");
+  syncDiffFilterControls();
 
   document.getElementById("clearB").addEventListener("click", () => clearReport("B"));
   syncNavigationInput.addEventListener("change", () => {
@@ -44,6 +47,19 @@
   diffTypeFilter.addEventListener("change", () => {
     dispatch({ type: "DIFF_TYPE_SELECTED", assetType: diffTypeFilter.value });
     renderDiff();
+  });
+
+  diffSearchInput.addEventListener("input", () => {
+    dispatch({ type: "DIFF_SEARCH_CHANGED", query: diffSearchInput.value });
+    renderDiff();
+  });
+
+  document.querySelectorAll("[data-diff-filter]").forEach((input) => {
+    input.addEventListener("change", () => {
+      dispatch({ type: "DIFF_FILTER_CHANGED", filter: input.dataset.diffFilter, enabled: input.checked });
+      syncDiffFilterControls();
+      renderDiff();
+    });
   });
 
   document.querySelectorAll("[data-diff-tab]").forEach((button) => {
@@ -80,7 +96,13 @@
           <div class="chart-host" data-role="chart"></div>
           <div class="chart-footer" data-role="summary"></div>
           <div class="asset-table-panel">
-            <div class="table-title"><span data-role="table-title">Assets in current section</span><span data-role="table-count"></span></div>
+            <div class="table-toolbar">
+              <div class="table-title"><span data-role="table-title">Assets in current section</span><span data-role="table-count"></span></div>
+              <label class="table-search">
+                <span>Search</span>
+                <input data-role="table-search" type="search" placeholder="Fuzzy search name or path" autocomplete="off">
+              </label>
+            </div>
             <div class="table-wrap" data-role="table"></div>
           </div>`;
         stack.appendChild(card);
@@ -96,6 +118,8 @@
           tableHost: card.querySelector('[data-role="table"]'),
           tableTitle: card.querySelector('[data-role="table-title"]'),
           tableCount: card.querySelector('[data-role="table-count"]'),
+          searchInput: card.querySelector('[data-role="table-search"]'),
+          searchQuery: "",
           currentRoot: null,
           missingPath: null,
           selectedAssetPath: null,
@@ -105,6 +129,10 @@
 
         view.back.addEventListener("click", () => navigateBack(view));
         view.home.addEventListener("click", () => navigateHome(view));
+        view.searchInput.addEventListener("input", () => {
+          view.searchQuery = view.searchInput.value;
+          renderAssetTableForView(view);
+        });
         state.views.set(`${side}:${type}`, view);
         renderView(view);
       }
@@ -178,6 +206,8 @@
         view.selectedAssetPath = null;
         view.history = [];
         view.sort = { key: "bytes", direction: -1 };
+        view.searchQuery = "";
+        view.searchInput.value = "";
         renderView(view);
       }
     }
@@ -332,17 +362,46 @@
     renderAssetTable(view, assets);
   }
 
+  function renderAssetTableForView(view) {
+    const section = state.reports[view.side]?.sections[view.type];
+    if (!section?.root || view.missingPath || !view.currentRoot) return;
+    renderAssetTable(view, assetsUnderNode(section.assets, view.currentRoot));
+  }
+
   function renderDiff() {
     const a = state.reports.A;
     const b = state.reports.B;
     diffSection.hidden = !(a && b);
     if (!a || !b) return;
     const rows = state.diffTab === "directories" ? buildDirectoryDiff(a, b) : buildAssetDiff(a, b);
-    const filtered = state.diffType === "all" ? rows : rows.filter((row) => row.assetType === state.diffType);
+    const typeFiltered = state.diffType === "all" ? rows : rows.filter((row) => row.assetType === state.diffType);
+    const filtered = typeFiltered.filter((row) => {
+      const name = nameFromPath(row.canonicalPath);
+      return matchesFuzzySearch(state.diffSearch, name, row.canonicalPath) && matchesDiffFilters(row);
+    });
     const sorted = sortRows(filtered, state.diffSort);
     const counts = filtered.reduce((acc, row) => ((acc[row.status] = (acc[row.status] || 0) + 1), acc), {});
     diffSummary.textContent = `${filtered.length} difference${filtered.length === 1 ? "" : "s"}: ${counts.Added || 0} added, ${counts.Removed || 0} removed, ${counts.Changed || 0} changed.`;
     renderDiffTable(sorted);
+  }
+
+  function matchesDiffFilters(row) {
+    const filters = state.diffFilters;
+    const statusKey = row.status.toLowerCase();
+    if (!filters[statusKey]) return false;
+    if (row.status !== "Changed") return true;
+
+    const directionFilterActive = filters.increased || filters.decreased;
+    if (!directionFilterActive) return true;
+    return (filters.increased && row.deltaBytes > 0) || (filters.decreased && row.deltaBytes < 0);
+  }
+
+  function syncDiffFilterControls() {
+    document.querySelectorAll("[data-diff-filter]").forEach((input) => {
+      const filter = input.dataset.diffFilter;
+      input.checked = Boolean(state.diffFilters[filter]);
+      if (filter === "increased" || filter === "decreased") input.disabled = !state.diffFilters.changed;
+    });
   }
 
   function renderDiffTable(rows) {

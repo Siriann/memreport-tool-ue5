@@ -3,6 +3,7 @@
 
   const { displayValue, nextSort, sortRows } = window.MemReport.Display;
   const { formatBytes } = window.MemReport.Filesize;
+  const { matchesFuzzySearch } = window.MemReport.Search;
 
   function tableColumnsForType(type) {
     const common = [
@@ -39,9 +40,13 @@
 
   function renderAssetTable(view, assets) {
     const columns = tableColumnsForType(view.type);
-    const rows = sortRows(assets, view.sort);
+    const query = view.searchQuery || "";
+    const filtered = assets.filter((asset) => matchesFuzzySearch(query, asset.name, asset.canonicalPath));
+    const rows = sortRows(filtered, view.sort);
     view.tableTitle.textContent = `Assets under ${view.currentRoot.canonicalPath || "/"}`;
-    view.tableCount.textContent = `${rows.length} row${rows.length === 1 ? "" : "s"}`;
+    view.tableCount.textContent = query
+      ? `${rows.length} of ${assets.length} rows`
+      : `${rows.length} row${rows.length === 1 ? "" : "s"}`;
     const table = document.createElement("table");
     table.appendChild(buildHeader(columns, view.sort, (key) => {
       view.sort = nextSort(view.sort, key);
