@@ -9,7 +9,6 @@ Current status: displaying texture, sound, or animation sequence size informatio
 
 - `example.memreport` - UE4 memreport example
 - `example_simple.memreport` - simplified UE4 memreport example
-- `example_ue5_8_windows.memreport` - UE5.8 Windows Editor memreport example
 
 ### Sample chart
 
