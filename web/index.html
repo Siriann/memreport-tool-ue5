@@ -10,39 +10,68 @@
   <header class="app-header">
     <div>
       <h1>MemReport Viewer</h1>
-      <p>Local, browser-only Unreal Engine memreport visualizer.</p>
-    </div>
-    <div class="controls">
-      <label class="folder-button">
-        <input id="folderInput" type="file" webkitdirectory directory multiple accept=".memreport">
-        Choose reports folder
-      </label>
-      <label class="report-control">
-        <span>Report</span>
-        <select id="reportSelect" disabled>
-          <option>Select a reports folder first</option>
-        </select>
-      </label>
+      <p>Local, browser-only Unreal Engine memreport visualizer and comparer.</p>
     </div>
   </header>
 
   <main>
-    <div id="status" class="status">Choose a folder containing <code>.memreport</code> files.</div>
-    <section class="charts-grid">
-      <article class="chart-card" data-chart="textures">
-        <div class="chart-heading"><div><h2>Textures</h2><div class="breadcrumb" data-role="breadcrumb">—</div></div><button class="back-button" data-role="back" disabled>← Back</button></div>
-        <div class="chart-host" data-role="chart"></div><div class="chart-footer" data-role="summary"></div>
+    <section class="report-picker-grid">
+      <article class="report-picker">
+        <div class="report-badge">A</div>
+        <label class="file-button">
+          <input id="reportAInput" type="file" accept=".memreport">
+          Choose report A
+        </label>
+        <div id="reportAName" class="report-name">No report selected</div>
       </article>
-      <article class="chart-card" data-chart="sounds">
-        <div class="chart-heading"><div><h2>Sounds</h2><div class="breadcrumb" data-role="breadcrumb">—</div></div><button class="back-button" data-role="back" disabled>← Back</button></div>
-        <div class="chart-host" data-role="chart"></div><div class="chart-footer" data-role="summary"></div>
-      </article>
-      <article class="chart-card" data-chart="animsequences">
-        <div class="chart-heading"><div><h2>Animations</h2><div class="breadcrumb" data-role="breadcrumb">—</div></div><button class="back-button" data-role="back" disabled>← Back</button></div>
-        <div class="chart-host" data-role="chart"></div><div class="chart-footer" data-role="summary"></div>
+      <article class="report-picker">
+        <div class="report-badge">B</div>
+        <label class="file-button">
+          <input id="reportBInput" type="file" accept=".memreport">
+          Choose report B
+        </label>
+        <button id="clearB" class="secondary-button" disabled>Clear B</button>
+        <div id="reportBName" class="report-name">Optional comparison report</div>
       </article>
     </section>
+
+    <div id="status" class="status">Choose report A to begin. Report B is optional.</div>
+
+    <section class="reports-grid">
+      <section class="report-column" data-side="A">
+        <div class="column-title"><span class="report-badge">A</span><span id="columnAName">Report A</span></div>
+        <div class="chart-stack" data-role="stack"></div>
+      </section>
+      <section class="report-column" data-side="B">
+        <div class="column-title"><span class="report-badge">B</span><span id="columnBName">Report B</span></div>
+        <div class="chart-stack" data-role="stack"></div>
+      </section>
+    </section>
+
+    <section id="diffSection" class="diff-section" hidden>
+      <div class="diff-heading">
+        <div>
+          <h2>Differences: B compared with A</h2>
+          <p>Only added, removed, or changed entries are shown.</p>
+        </div>
+        <label class="diff-filter">Asset type
+          <select id="diffTypeFilter">
+            <option value="all">All</option>
+            <option value="textures">Textures</option>
+            <option value="sounds">Sounds</option>
+            <option value="animsequences">Animations</option>
+          </select>
+        </label>
+      </div>
+      <div class="tabs" role="tablist">
+        <button class="tab-button active" data-diff-tab="directories">Directories</button>
+        <button class="tab-button" data-diff-tab="assets">Assets</button>
+      </div>
+      <div id="diffSummary" class="diff-summary"></div>
+      <div id="diffTable" class="table-wrap"></div>
+    </section>
   </main>
+
   <div id="tooltip" class="tooltip" hidden></div>
   <script src="app.js"></script>
 </body>
