@@ -38,6 +38,7 @@ main { padding: 18px 22px 36px; }
 .table-title { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; color: #c5ccd6; font-size: .78rem; }
 .table-title span:last-child { color: #7f8998; }
 .table-wrap { overflow: auto; max-height: 420px; }
+.report-column .asset-table-panel .table-wrap { height: 420px; max-height: 420px; }
 table { width: 100%; border-collapse: collapse; font-size: .73rem; }
 th, td { padding: 7px 9px; border-bottom: 1px solid #252b34; text-align: left; vertical-align: top; white-space: nowrap; }
 th { position: sticky; top: 0; z-index: 1; background: #1b212a; color: #b7c0cd; font-weight: 650; }
@@ -66,5 +67,10 @@ select { border: 1px solid #3b4656; border-radius: 7px; padding: 7px 9px; backgr
 .diff-changed { color: #f0c674; }
 .delta-positive { color: #ffb0b6; }
 .delta-negative { color: #9addae; }
-@media (max-width: 1200px) { .reports-grid { grid-template-columns: 1fr; } .chart-host { min-height: 500px; } .chart-host svg { height: 500px; } }
+@media (max-width: 1200px) {
+  .reports-grid { grid-template-columns: 1fr; }
+  .chart-host { min-height: 500px; }
+  .chart-host svg { height: 500px; }
+  .report-column .asset-table-panel .table-wrap { height: auto; max-height: 420px; }
+}
 @media (max-width: 760px) { main { padding: 12px; } .report-picker-grid { grid-template-columns: 1fr; } .report-picker { flex-wrap: wrap; } .diff-heading { align-items: stretch; flex-direction: column; } }
