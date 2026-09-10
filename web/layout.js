@@ -20,13 +20,6 @@
     });
   });
 
-  window.addEventListener("memreport:select-comparison-type", (event) => {
-    const requestedType = event.detail?.type;
-    if (!comparisonButtons.some((button) => button.dataset.comparisonType === requestedType)) return;
-    dispatch({ type: "COMPARISON_TYPE_SELECTED", assetType: requestedType });
-    diffTypeFilter.dispatchEvent(new Event("change", { bubbles: true }));
-  });
-
   subscribe(renderLayout);
 
   function setVisibleChart(column, type) {
