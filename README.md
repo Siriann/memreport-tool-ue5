@@ -1,7 +1,15 @@
 # memreport-tool
-This tool aims to visualize UE4 memreport file content. 
+This tool visualizes Unreal Engine memreport file content.
 
-Current status: displaying texture or sound size information in form of nested donut chart.
+The parser supports the original UE4 memreport format as well as UE5.8 memreports. Texture parsing is driven by the columns reported in each memreport, so UE4 and UE5 layouts can be handled without assuming a fixed column order.
+
+Current status: displaying texture, sound, or animation sequence size information in the form of a nested donut chart (when the corresponding detailed section is present in the memreport).
+
+### Sample reports
+
+- `example.memreport` - UE4 memreport example
+- `example_simple.memreport` - simplified UE4 memreport example
+- `example_ue5_8_windows.memreport` - UE5.8 Windows Editor memreport example
 
 ### Sample chart
 
@@ -18,6 +26,6 @@ Required packages:
 
 ### Usage
 Call `main.py` with parameters:
-- `-i <input_filename>` - obligatory: memreport file 
-- `-c <chart_type>` - obligatory: chart type, one of the following: [`textures`, `sounds`]
+- `-i <input_filename>` - obligatory: memreport file
+- `-c <chart_type>` - obligatory: chart type, one of the following: [`textures`, `sounds`, `animsequences`]
 - `-t <size threshold in KB>` - optional: merges items under certain size
