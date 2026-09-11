@@ -1,6 +1,7 @@
 (() => {
   "use strict";
 
+  const LOCAL_REPORT_VALUE = "__local__";
   const statusEl = document.getElementById("status");
   const refreshButton = document.getElementById("refreshReports");
   const selectors = {
@@ -17,7 +18,31 @@
     selectors.B.value = "";
   });
 
-  refreshReports();
+  if (window.location.protocol === "file:") {
+    enableLocalFileMode();
+  } else {
+    refreshReports();
+  }
+
+  function enableLocalFileMode() {
+    refreshButton.hidden = true;
+    for (const side of ["A", "B"]) {
+      const select = selectors[side];
+      select.hidden = true;
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "file-button";
+      button.textContent = side === "A" ? "Choose report A" : "Choose report B";
+      button.addEventListener("click", () => openLocalFilePicker(side));
+      select.before(button);
+    }
+
+    const subtitle = document.querySelector(".app-header p");
+    if (subtitle) subtitle.textContent = "Local, browser-only Unreal Engine memreport visualizer and comparer.";
+    statusEl.textContent = "Choose report A to begin. Report B is optional.";
+    statusEl.classList.remove("error");
+  }
 
   async function refreshReports() {
     setLoading(true);
@@ -28,10 +53,15 @@
       const reports = Array.isArray(payload.reports) ? payload.reports : [];
       reportsById = new Map(reports.map((report) => [report.id, report]));
       populateSelectors(reports);
-      if (!reports.length) statusEl.textContent = "No .memreport files were found in the configured report directories.";
+      statusEl.classList.remove("error");
+      if (!reports.length) {
+        statusEl.textContent = "No server reports were found. You can still choose Local report… from either dropdown.";
+      }
     } catch (error) {
       console.error(error);
-      statusEl.textContent = `Could not list server reports: ${error.message}`;
+      reportsById = new Map();
+      populateSelectors([]);
+      statusEl.textContent = `Could not list server reports: ${error.message}. Local reports are still available.`;
       statusEl.classList.add("error");
     } finally {
       setLoading(false);
@@ -47,6 +77,11 @@
       placeholder.textContent = side === "A" ? "Choose report A" : "Choose optional report B";
       select.replaceChildren(placeholder);
 
+      const localOption = document.createElement("option");
+      localOption.value = LOCAL_REPORT_VALUE;
+      localOption.textContent = "Local report…";
+      select.appendChild(localOption);
+
       for (const report of reports) {
         const option = document.createElement("option");
         option.value = report.id;
@@ -60,6 +95,12 @@
 
   async function selectReport(side) {
     const reportId = selectors[side].value;
+    if (reportId === LOCAL_REPORT_VALUE) {
+      selectors[side].value = "";
+      openLocalFilePicker(side);
+      return;
+    }
+
     if (!reportId) {
       if (side === "B") document.getElementById("clearB").click();
       return;
@@ -87,6 +128,12 @@
     } finally {
       selectors[side].disabled = false;
     }
+  }
+
+  function openLocalFilePicker(side) {
+    const input = document.getElementById(`report${side}Input`);
+    input.value = "";
+    input.click();
   }
 
   function setLoading(loading) {
