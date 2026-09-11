@@ -112,7 +112,9 @@ All three are enabled by default. **Increased** and **Decreased** are optional r
 
 The diff summary is calculated from the currently visible result set, so it reflects the active search and filter combination rather than the unfiltered diff.
 
-<!-- TODO: Add a screenshot showing diff search combined with Added/Removed/Changed and Increased/Decreased filters. -->
+![Diff-driven navigation](docs/screenshots/fuzzy-search.png)
+
+![Diff-driven navigation](docs/screenshots/filters.png)
 
 ## Running the application
 
