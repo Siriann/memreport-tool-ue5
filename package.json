@@ -1,0 +1,14 @@
+{
+  "name": "memreport-tool-ue5",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Server-backed Unreal Engine memreport visualizer and comparison tool",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server/server.js",
+    "check": "node --check server/server.js && node --check server/report-source.js && node --check js/server-bootstrap.js"
+  }
+}
