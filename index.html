@@ -6,12 +6,13 @@
   <title>MemReport Viewer</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/server.css">
 </head>
 <body>
   <header class="app-header">
     <div>
       <h1>MemReport Viewer</h1>
-      <p>Local, browser-only Unreal Engine memreport visualizer and comparer.</p>
+      <p>Server-backed Unreal Engine memreport visualizer and comparer.</p>
     </div>
   </header>
 
@@ -19,24 +20,29 @@
     <section class="report-picker-grid">
       <article class="report-picker">
         <div class="report-badge">A</div>
-        <label class="file-button">
-          <input id="reportAInput" type="file" accept=".memreport">
-          Choose report A
-        </label>
+        <div class="server-report-controls">
+          <select id="serverReportASelect" class="server-report-select" aria-label="Choose report A">
+            <option value="">Loading reports…</option>
+          </select>
+          <button id="refreshReports" class="secondary-button" type="button">Refresh reports</button>
+        </div>
+        <input id="reportAInput" type="file" accept=".memreport" hidden>
         <div id="reportAName" class="report-name">No report selected</div>
       </article>
       <article class="report-picker">
         <div class="report-badge">B</div>
-        <label class="file-button">
-          <input id="reportBInput" type="file" accept=".memreport">
-          Choose report B
-        </label>
-        <button id="clearB" class="secondary-button" disabled>Clear B</button>
+        <div class="server-report-controls">
+          <select id="serverReportBSelect" class="server-report-select" aria-label="Choose report B">
+            <option value="">Loading reports…</option>
+          </select>
+          <button id="clearB" class="secondary-button" disabled>Clear B</button>
+        </div>
+        <input id="reportBInput" type="file" accept=".memreport" hidden>
         <div id="reportBName" class="report-name">Optional comparison report</div>
       </article>
     </section>
 
-    <div id="status" class="status">Choose report A to begin. Report B is optional.</div>
+    <div id="status" class="status">Loading the server report list…</div>
 
     <div id="comparisonToolbar" class="comparison-toolbar" hidden>
       <div id="comparisonTabs" class="comparison-tabs" role="tablist" aria-label="Comparison asset type">
@@ -129,6 +135,7 @@
   <script src="js/ui/table.js"></script>
   <script src="js/ui/sunburst.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/server-bootstrap.js"></script>
   <script src="js/ui/layout.js"></script>
 </body>
 </html>
